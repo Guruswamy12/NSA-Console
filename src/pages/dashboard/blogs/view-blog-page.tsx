@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Pencil } from "lucide-react";
-import { MOCK_BLOGS } from "../../../mock/data";
+import { api } from "../../../api";
 import type { Blog } from "../../../mock/data";
 import { BlogStatusBadge } from "../../../components/dashboard/blog-status-badge";
 
@@ -12,10 +12,20 @@ export default function ViewBlogPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setBlog(MOCK_BLOGS.find((b) => b._id === id) || null);
-      setLoading(false);
-    }, 300);
+    if (!id) return;
+    const fetchBlog = async () => {
+      setLoading(true);
+      try {
+        const data = await api.getBlog(id);
+        setBlog(data || null);
+      } catch (error) {
+        console.error("Failed to fetch blog", error);
+        setBlog(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlog();
   }, [id]);
 
   if (loading)
@@ -24,6 +34,7 @@ export default function ViewBlogPage() {
         Loading...
       </div>
     );
+
   if (!blog)
     return (
       <div className="flex items-center justify-center h-64 text-red-500">
@@ -64,6 +75,7 @@ export default function ViewBlogPage() {
           </div>
           <BlogStatusBadge status={blog.status} />
         </div>
+
         <div className="flex items-center gap-4 text-sm text-gray-500 border-t pt-4">
           {blog.authorName && <span>By {blog.authorName}</span>}
           {blog.categoryId?.name && (
@@ -75,18 +87,21 @@ export default function ViewBlogPage() {
             <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
           )}
         </div>
+
         {blog.excerpt && (
           <p className="text-gray-600 italic border-l-4 border-primary/30 pl-4">
             {blog.excerpt}
           </p>
         )}
+
         {blog.initialContent && (
           <p className="text-gray-700 leading-relaxed">{blog.initialContent}</p>
         )}
-        {blog.sections?.length > 0 && (
+
+        {(blog.sections ?? []).length > 0 && (
           <div className="space-y-6 border-t pt-6">
             <h2 className="text-xl font-semibold">Sections</h2>
-            {blog.sections.map((section, i) => (
+            {(blog.sections ?? []).map((section, i) => (
               <div key={i}>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   {section.title}
@@ -98,10 +113,11 @@ export default function ViewBlogPage() {
             ))}
           </div>
         )}
-        {blog.faqs?.length > 0 && (
+
+        {(blog.faqs ?? []).length > 0 && (
           <div className="space-y-4 border-t pt-6">
             <h2 className="text-xl font-semibold">FAQs</h2>
-            {blog.faqs.map((faq, i) => (
+            {(blog.faqs ?? []).map((faq, i) => (
               <div key={i} className="border rounded-lg p-4">
                 <p className="font-medium text-gray-800">{faq.question}</p>
                 <p className="text-gray-600 mt-1 text-sm">{faq.answer}</p>
@@ -109,6 +125,7 @@ export default function ViewBlogPage() {
             ))}
           </div>
         )}
+
         {blog.keywords && (
           <div className="border-t pt-4">
             <p className="text-sm text-gray-500">

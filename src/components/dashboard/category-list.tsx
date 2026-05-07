@@ -1,27 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Tag } from "lucide-react";
-// import { MOCK_CATEGORIES } from "../../mock/data"
+import { api } from "../../api";
 import type { Category } from "../../mock/data";
 import { CategoryModal } from "./category-modal";
 
 export function CategoryList() {
-  const [categories, setCategories] = useState<Category[]>([]); // TODO: replace with MOCK_CATEGORIES or API
-  const [loading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  const handleDelete = (id: string) => {
-    if (!confirm("Delete this category?")) return;
-    setCategories((prev) => prev.filter((c) => c._id !== id));
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getCategories();
+      const list = Array.isArray(data)
+        ? data
+        : data?.data || data?.categories || [];
+      setCategories(list);
+    } catch (error) {
+      console.error("Failed to fetch categories", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSuccess = (saved: Category) => {
-    if (editingCategory) {
-      setCategories((prev) =>
-        prev.map((c) => (c._id === saved._id ? saved : c)),
-      );
-    } else {
-      setCategories((prev) => [...prev, saved]);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this category?")) return;
+    try {
+      await api.deleteCategory(id);
+      await fetchCategories();
+    } catch (error) {
+      console.error("Failed to delete category", error);
+    }
+  };
+
+  const handleSuccess = async (saved: Category) => {
+    try {
+      if (editingCategory) {
+        await api.updateCategory(saved._id, saved);
+      } else {
+        await api.createCategory(saved);
+      }
+      await fetchCategories();
+    } catch (error) {
+      console.error("Failed to save category", error);
     }
   };
 
@@ -45,9 +72,9 @@ export function CategoryList() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg border shadow-sm">
-        <div className="p-4 border-b flex items-center justify-between">
-          <div>
+   <div className="bg-white rounded-lg border-gray-200 shadow-xl">
+        <div className="p-4 flex items-center justify-between">
+           <div className="px-5">
             <h2 className="font-semibold">All Categories</h2>
             <p className="text-sm text-gray-500">
               List of all categories available for blogs.
@@ -57,9 +84,9 @@ export function CategoryList() {
             <Tag className="h-5 w-5 text-primary" />
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+          <div className="overflow-x-auto p-8">
+          <table className="w-full text-sm shadow-md rounded-xl border border-gray-300">
+            <thead className="bg-gray-100 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold">Name</th>
                 <th className="text-left px-4 py-3 font-semibold">
@@ -88,12 +115,12 @@ export function CategoryList() {
                 categories.map((cat) => (
                   <tr
                     key={cat._id}
-                    className="border-b hover:bg-gray-50 transition-colors"
+                    className="border-b border-gray-300 last:border-0 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-4 py-3 font-medium">{cat.name}</td>
+                    <td className="px-4 py-3 font-medium text-sm">{cat.name}</td>
                     <td className="px-4 py-3">
                       {cat.parentId ? (
-                        <span className="px-2 py-0.5 bg-primary-light text-primary rounded text-xs border border-primary/30">
+                        <span className="px-2.5 py-0.5 bg-primary/10 text-primary rounded-xl text-xs font-medium border border-primary/20">
                           {cat.parentId.name}
                         </span>
                       ) : (
@@ -110,7 +137,7 @@ export function CategoryList() {
                             setEditingCategory(cat);
                             setIsModalOpen(true);
                           }}
-                          className="p-1.5 text-blue-500 hover:bg-primary-light rounded"
+                          className="p-1.5 text-primary hover:bg-primary-light rounded"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>

@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
-import { PanelLeftOpen, PanelLeftClose, PanelLeftIcon } from "lucide-react";
+import { PanelLeftIcon } from "lucide-react";
 import AppSidebar from "../components/dashboard/app-sidebar";
 
 export default function DashboardLayout() {

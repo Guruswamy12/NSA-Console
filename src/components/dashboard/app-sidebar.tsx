@@ -6,8 +6,6 @@ import {
   BookOpen,
   LogOut,
   GalleryVerticalEnd,
-  ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import type { LucideIcon } from "lucide-react";
@@ -62,10 +60,7 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
   const location = useLocation();
   const { getUser, logout } = useAuth();
   const user = getUser();
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    "Team Management": true,
-    "Content Management": true,
-  });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (title: string) =>
     setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -132,7 +127,7 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
   return (
     <aside
-      className="w-60 h-screen flex flex-col shrink-0 overflow-hidden"
+      className="w-70 h-screen flex flex-col shrink-0 overflow-hidden"
       style={{ backgroundColor: "#f0f4ff", borderRight: "1px solid #c5d9f7" }}
     >
       <div className="px-4 py-4 bg-primary">
@@ -166,12 +161,25 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
               <Link
                 key={item.title}
                 to={item.url!}
-                className="flex items-center gap-2 px-1 py-1 rounded-lg transition-colors"
-                style={{ color: active ? "#1a3a6b" : "#1e3a5f" }}
+                className="flex items-center gap-2 px-2 py-2 rounded-lg transition-colors"
+                style={{
+                  color: active ? "#2563eb" : "#1e3a5f",
+                  backgroundColor: active ? "#dbeafe" : "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!active)
+                    e.currentTarget.style.backgroundColor = "#dbeafe";
+                  if (!active) e.currentTarget.style.color = "#2563eb";
+                }}
+                onMouseLeave={(e) => {
+                  if (!active)
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  if (!active) e.currentTarget.style.color = "#1e3a5f";
+                }}
               >
                 <item.icon
                   className="h-5 w-5 shrink-0"
-                  style={{ color: "#2563eb" }}
+                  style={{ color: active ? "#2563eb" : "#2563eb" }}
                 />
                 <span className="text-sm font-bold">{item.title}</span>
               </Link>
@@ -187,8 +195,16 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
               <button
                 type="button"
                 onClick={() => toggleGroup(item.title)}
-                className="w-full flex items-center justify-between px-1 py-1 rounded-lg transition-colors"
+                className="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors"
                 style={{ color: "#1e3a5f" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#dbeafe";
+                  e.currentTarget.style.color = "#2563eb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "#1e3a5f";
+                }}
               >
                 <span className="flex items-center gap-2">
                   <item.icon
@@ -213,12 +229,20 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                         style={{
                           color: active ? "#2563eb" : "#2d4a7a",
                           fontWeight: active ? 600 : 400,
+                          backgroundColor: active ? "#dbeafe" : "transparent",
                         }}
                         onMouseEnter={(e) => {
-                          if (!active) e.currentTarget.style.color = "#1a3a6b";
+                          if (!active) {
+                            e.currentTarget.style.color = "#2563eb";
+                            e.currentTarget.style.backgroundColor = "#dbeafe";
+                          }
                         }}
                         onMouseLeave={(e) => {
-                          if (!active) e.currentTarget.style.color = "#2d4a7a";
+                          if (!active) {
+                            e.currentTarget.style.color = "#2d4a7a";
+                            e.currentTarget.style.backgroundColor =
+                              "transparent";
+                          }
                         }}
                       >
                         {sub.title}

@@ -27,6 +27,11 @@ export const api = {
       { headers: authHeaders() },
     ).then((r) => r.json()),
 
+  getBlogsPaged: (page: number, limit = 10) =>
+    fetch(`${BASE_URL}/blogs?page=${page}&limit=${limit}`, {
+      headers: authHeaders(),
+    }).then((r) => r.json()),
+
   getBlog: (id: string) =>
     fetch(`${BASE_URL}/blogs/${id}`, { headers: authHeaders() }).then((r) =>
       r.json(),

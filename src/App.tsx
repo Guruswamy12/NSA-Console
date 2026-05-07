@@ -33,7 +33,9 @@ export default function App() {
           <Route index element={<DashboardHome />} />
           <Route path="blogs" element={<BlogsPage />} />
           <Route path="blogs/new" element={<NewBlogPage />} />
-
+          <Route path="blogs/categories" element={<CategoriesPage />} />
+          <Route path="blogs/:id" element={<EditBlogPage />} />
+          {/* <Route path="blogs/:id/view" element={<ViewBlogPage />} /> */}
           <Route path="team/users" element={<UsersPage />} />
           <Route path="team/roles" element={<RolesPage />} />
           <Route path="team/permissions" element={<PermissionsPage />} />

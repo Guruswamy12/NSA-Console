@@ -19,6 +19,8 @@ export function CategoryModal({
 }: CategoryModalProps) {
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("none");
+  const [loading, setLoading] = useState(false)
+
 
   useEffect(() => {
     if (categoryToEdit) {
@@ -35,7 +37,6 @@ export function CategoryModal({
   const parentOptions = allCategories.filter(
     (c) => c._id !== categoryToEdit?._id,
   );
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const selectedParent =
@@ -73,22 +74,22 @@ export function CategoryModal({
             ? "Update category details."
             : "Create a new category for your blogs."}
         </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit} className="space-y-4 px-2">
+          <div className="flex justify-between gap-15 items-center">
             <label className="block text-sm font-medium mb-1">Name</label>
             <input
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
           </div>
-          <div>
+            <div className="flex justify-center gap-5 items-center">
             <label className="block text-sm font-medium mb-1">
               Parent Category
             </label>
             <select
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
             >
@@ -104,15 +105,15 @@ export function CategoryModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
-              type="submit"
-              className="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-hover"
+              type="submit" disabled={loading}
+              className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover"
             >
-              Save
+                 {loading ? "Saving..." : "Save changes"}
             </button>
           </div>
         </form>

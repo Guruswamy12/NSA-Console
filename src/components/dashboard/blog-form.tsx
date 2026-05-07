@@ -1,11 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Plus, Trash2, Upload, X } from "lucide-react";
-// import { api } from "../../api"
+import { api } from "../../api";
 import { RichTextEditor } from "../ui/rich-text-editor";
 import type { Blog } from "../../mock/data";
-// import { MOCK_CATEGORIES } from "../../mock/data"
 
 interface Category {
   _id: string;
@@ -47,7 +46,7 @@ const labelCls = "block text-sm font-medium text-gray-700 mb-1.5";
 export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [categories] = useState<Category[]>([]); 
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState<FormData>({
     title: initialData?.title || "",
     h2: initialData?.h2 || "",
@@ -68,11 +67,17 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
         : [{ question: "", answer: "" }],
   });
 
-  // useEffect(() => {
-  //   api.getCategories()
-  //     .then((data: Category[]) => setCategories(data))
-  //     .catch(console.error)
-  // }, [])
+  useEffect(() => {
+    api
+      .getCategories()
+      .then((data: unknown) => {
+        const list = Array.isArray(data)
+          ? data
+          : (data as { data?: Category[] })?.data || [];
+        setCategories(list);
+      })
+      .catch(console.error);
+  }, []);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -121,25 +126,39 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
       faqs: prev.faqs.filter((_, i) => i !== index),
     }));
 
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFormData((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
-    // TODO: replace with real upload:
-    // const res = await api.uploadImage(file)
-    // if (res.ok) { const data = await res.json(); setFormData(prev => ({ ...prev, image: data.url })) }
+    try {
+      const res = await api.uploadImage(file);
+      if (res.ok) {
+        const data = await res.json();
+        setFormData((prev) => ({ ...prev, image: data.url }));
+      }
+    } catch (error) {
+      console.error("Failed to upload image", error);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(isEditing ? "Blog updated! (UI only)" : "Blog created! (UI only)");
-    navigate(-1);
-    // TODO: replace with real API call:
-    // const cleanSections = formData.sections.filter((s) => s.title && s.content)
-    // const cleanFaqs = formData.faqs.filter((f) => f.question && f.answer)
-    // const payload = { ...formData, sections: cleanSections, faqs: cleanFaqs }
-    // const res = isEditing ? await api.updateBlog(initialData!._id, payload) : await api.createBlog(payload)
-    // if (res.ok) { navigate("/dashboard/blogs") }
+    const cleanSections = formData.sections.filter((s) => s.title && s.content);
+    const cleanFaqs = formData.faqs.filter((f) => f.question && f.answer);
+    const payload = { ...formData, sections: cleanSections, faqs: cleanFaqs };
+    try {
+      const res = isEditing
+        ? await api.updateBlog(initialData!._id, payload)
+        : await api.createBlog(payload);
+      if (res.ok) {
+        navigate("/dashboard/blogs");
+      } else {
+        const error = await res.json();
+        alert(`Failed to save blog: ${error.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Failed to save blog", error);
+      alert("An error occurred while saving the blog.");
+    }
   };
 
   return (
@@ -211,7 +230,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label htmlFor="title" className={labelCls}>
                   Title <span className="text-red-500">*</span>
@@ -226,7 +244,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   required
                 />
               </div>
-
               <div>
                 <label htmlFor="h2" className={labelCls}>
                   Heading 2 / Sub-heading{" "}
@@ -242,7 +259,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   required
                 />
               </div>
-
               <div>
                 <label className={labelCls}>
                   Initial Content <span className="text-red-500">*</span>
@@ -268,7 +284,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                 <Plus className="h-4 w-4" /> Add Section
               </button>
             </div>
-
             {formData.sections.map((section, index) => (
               <div
                 key={index}
@@ -333,7 +348,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                 <Plus className="h-4 w-4" /> Add FAQ
               </button>
             </div>
-
             {formData.faqs.map((faq, index) => (
               <div
                 key={index}
@@ -405,7 +419,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   />
                 </div>
               </div>
-
               <div>
                 <label htmlFor="altTag" className={labelCls}>
                   Image Alt Tag <span className="text-red-500">*</span>
@@ -420,7 +433,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   required
                 />
               </div>
-
               {formData.image && (
                 <div className="relative rounded-lg overflow-hidden border border-gray-100 aspect-video group">
                   <img
@@ -462,7 +474,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   onChange={handleChange}
                 />
               </div>
-
               <div>
                 <label htmlFor="excerpt" className={labelCls}>
                   Meta Description
@@ -476,7 +487,6 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   onChange={handleChange}
                 />
               </div>
-
               <div>
                 <label htmlFor="authorName" className={labelCls}>
                   Author Name Override

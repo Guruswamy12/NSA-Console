@@ -11,11 +11,9 @@ import {
   TrendingUp,
   Activity,
   Plus,
-  Menu,
 } from "lucide-react";
 import { BlogStatusBadge } from "../../components/dashboard/blog-status-badge";
-// import { api } from "../../api"
-import { MOCK_STATS, MOCK_BLOGS } from "../../mock/data";
+import { api } from "../../api";
 import type { Blog } from "../../mock/data";
 
 interface Stats {
@@ -50,16 +48,24 @@ export default function DashboardHome() {
       setLoading(true);
       try {
         const userStr = localStorage.getItem("user");
-        if (userStr) setUser(JSON.parse(userStr));
+        const parsedUser = userStr ? JSON.parse(userStr) : null;
+        if (parsedUser) setUser(parsedUser);
 
-        // const queryParams = user?.role === "Team Member" ? `?role=Team Member&userId=${user.id}` : ""
-        // const [statsData, blogsData] = await Promise.all([api.getStats(queryParams), api.getBlogs(queryParams)])
-        // setStats(statsData)
-        // const blogs = Array.isArray(blogsData) ? blogsData : Array.isArray(blogsData?.data) ? blogsData.data : []
-        // setAllBlogs(blogs)
+        const queryParams =
+          parsedUser?.role === "Team Member"
+            ? `?role=Team Member&userId=${parsedUser.id}`
+            : "";
 
-        setStats(MOCK_STATS);
-        setAllBlogs(MOCK_BLOGS);
+        const [statsData, blogsData] = await Promise.all([
+          api.getStats(queryParams),
+          api.getBlogs(queryParams),
+        ]);
+
+        setStats(statsData);
+        const blogs = Array.isArray(blogsData)
+          ? blogsData
+          : blogsData?.data || blogsData?.blogs || [];
+        setAllBlogs(blogs);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
       } finally {
@@ -144,11 +150,11 @@ export default function DashboardHome() {
   ];
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-md text-gray-700 mt-2">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
             Overview of your platform's performance.
           </p>
         </div>
@@ -160,14 +166,14 @@ export default function DashboardHome() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
           <div
             key={card.label}
-            className={`bg-white rounded-xl border-gray-400 border-l-4 ${card.border} px-4 py-8 shadow-sm hover:shadow-md transition-shadow`}
+            className={`bg-white rounded-xl border border-l-4 ${card.border} px-5 py-5 shadow-sm hover:shadow-md transition-shadow`}
           >
             <div className="flex items-start justify-between mb-4">
-              <p className="text-sm font-medium text-black leading-snug">
+              <p className="text-sm font-medium text-gray-600 leading-snug">
                 {card.label}
               </p>
               <div
@@ -176,7 +182,7 @@ export default function DashboardHome() {
                 {card.icon}
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
               {loading ? (
                 <span className="animate-pulse text-gray-300">—</span>
               ) : (
@@ -202,20 +208,19 @@ export default function DashboardHome() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border-gray-900 border-t-4 border-t-primary shadow-sm">
-        <div className="px-6 pt-6">
+      <div className="bg-white rounded-xl border border-t-4 border-t-primary shadow-sm">
+        <div className="px-6 py-5   ">
           <h2 className="text-base font-semibold text-gray-900">
             Recent Blogs
           </h2>
-          <p className="text-sm text-gray-600 py-2">
+          <p className="text-sm text-gray-400 mt-0.5">
             Manage your blogs and view their performance.
           </p>
         </div>
-
         <div className="px-6 py-4">
-          <div className="flex items-center justify-between gap-4 mb-5">
-            <div className="relative w-full max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 bg-[#f6faff]" />
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="relative w-full max-w-xs bg-dashboard-bg">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="search"
                 placeholder="Search blogs..."
@@ -224,39 +229,30 @@ export default function DashboardHome() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-9 pr-3 py-2 border  border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-            <div className="relative bg-[#f6faff]">
+            <div className="relative">
               <button
                 onClick={() => setFilterOpen((o) => !o)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-bold text-black hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
               >
-                <ListFilter className="h-4 w-4" />
-                Filter
+                <ListFilter className="h-4 w-4" /> Filter
               </button>
               {filterOpen && (
-                <div className="absolute right-0 mt-1 w-32 bg-white border-gray-400 rounded-lg shadow-xl z-20 py-1">
-                  <p className="px-3 py-1.5 text-xs font-semibold text-black  uppercase tracking-wide">
+                <div className="absolute right-0 mt-1 w-48 bg-white border rounded-lg shadow-lg z-20 py-1">
+                  <p className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
                     Filter by Status
                   </p>
-                  <hr className="my-1 text-gray-400" />
+                  <hr className="my-1" />
                   {["APPROVED", "DRAFT", "ALL"].map((s) => (
                     <button
                       key={s}
                       onClick={() => handleFilterSelect(s)}
-                      className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors ${
-                        statusFilter === s
-                          ? "text-primary font-medium"
-                          : "text-gray-700"
-                      }`}
+                      className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors ${statusFilter === s ? "text-primary font-medium" : "text-gray-700"}`}
                     >
                       <span
-                        className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
-                          statusFilter === s
-                            ? "bg-primary border-primary"
-                            : "border-gray-300"
-                        }`}
+                        className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${statusFilter === s ? "bg-primary border-primary" : "border-gray-300"}`}
                       >
                         {statusFilter === s && (
                           <svg
@@ -284,26 +280,26 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-300 overflow-hidden">
+          <div className="rounded-lg border border-gray-100 overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-300">
+              <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="hidden sm:table-cell text-left px-4 py-3 font-semibold text-black w-20">
+                  <th className="hidden sm:table-cell text-left px-4 py-3 font-semibold text-gray-500 w-20">
                     Image
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold text-black">
+                  <th className="text-left px-4 py-3 font-semibold text-gray-500">
                     Title
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold text-black">
+                  <th className="text-left px-4 py-3 font-semibold text-gray-500">
                     Status
                   </th>
-                  <th className="hidden md:table-cell text-left px-4 py-3 font-semibold text-black">
+                  <th className="hidden md:table-cell text-left px-4 py-3 font-semibold text-gray-500">
                     Category
                   </th>
-                  <th className="hidden md:table-cell text-left px-4 py-3 font-semibold text-black">
+                  <th className="hidden md:table-cell text-left px-4 py-3 font-semibold text-gray-500">
                     Date Posted
                   </th>
-                  <th className="text-right px-4 py-3 font-semibold text-black">
+                  <th className="text-right px-4 py-3 font-semibold text-gray-500">
                     Votes
                   </th>
                 </tr>
@@ -373,7 +369,14 @@ export default function DashboardHome() {
                         </span>
                       </td>
                       <td className="hidden md:table-cell px-4 py-3 text-gray-400 text-xs">
-                        {format(new Date(blog.createdAt), "MMM d, yyyy")}
+                        {blog.createdAt
+                          ? (() => {
+                              const d = new Date(blog.createdAt);
+                              return isNaN(d.getTime())
+                                ? "-"
+                                : format(d, "MMM d, yyyy");
+                            })()
+                          : "-"}
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-gray-700">
                         {blog.votes?.toLocaleString() || 0}
@@ -385,7 +388,6 @@ export default function DashboardHome() {
             </table>
           </div>
 
-          {/* Pagination */}
           {!loading && filteredBlogs.length > 0 && (
             <div className="flex items-center justify-end gap-2 pt-4">
               <button
@@ -395,7 +397,7 @@ export default function DashboardHome() {
               >
                 <ChevronLeft className="h-4 w-4" /> Previous
               </button>
-              <span className="text-sm text-black">
+              <span className="text-sm text-gray-500">
                 Page {currentPage} of {totalPages}
               </span>
               <button

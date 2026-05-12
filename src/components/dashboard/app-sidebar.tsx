@@ -6,8 +6,10 @@ import {
   BookOpen,
   LogOut,
   GalleryVerticalEnd,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from "lucide-react";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthContext";
 import type { LucideIcon } from "lucide-react";
 
 interface SubNavItem {
@@ -58,8 +60,7 @@ interface AppSidebarProps {
 export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { getUser, logout } = useAuth();
-  const user = getUser();
+  const { user, logout } = useAuth();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (title: string) =>
@@ -88,10 +89,24 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
     return (
       <aside
-        className="w-12 h-screen flex flex-col shrink-0 overflow-hidden border-r"
-        style={{ backgroundColor: "#f0f4ff" }}
+        className="w-14 h-screen flex flex-col shrink-0 overflow-hidden"
+        style={{ backgroundColor: "#f0f4ff", borderRight: "1px solid #c5d9f7" }}
       >
-        <nav className="flex flex-col items-center gap-3 px-2 pt-4 border-r">
+        <div className="bg-primary flex items-center justify-between px-2 py-4 shrink-0">
+          <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+            <GalleryVerticalEnd className="h-4 w-4 text-white" />
+          </div>
+          {/* <button
+            onClick={onToggle}
+            className="h-7 w-7 flex items-center justify-center rounded-lg transition-colors"
+            style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+            title="Expand sidebar"
+          >
+            <PanelLeftOpen className="h-4 w-4 text-white" />
+          </button> */}
+        </div>
+
+        <nav className="flex flex-col items-center gap-3 px-2 pt-4">
           {parentIcons.map(({ icon: Icon, url, title, active }) => (
             <Link
               key={title}
@@ -113,6 +128,7 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             </Link>
           ))}
         </nav>
+
         <div className="mt-auto flex items-center justify-center pb-4 px-2">
           <div
             className="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
@@ -127,10 +143,10 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
   return (
     <aside
-      className="w-70 h-screen flex flex-col shrink-0 overflow-hidden"
+      className="w-60 h-screen flex flex-col shrink-0 overflow-hidden"
       style={{ backgroundColor: "#f0f4ff", borderRight: "1px solid #c5d9f7" }}
     >
-      <div className="px-4 py-4 bg-primary">
+      <div className="px-4 py-4 bg-primary flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
             <GalleryVerticalEnd className="h-5 w-5 text-white" />
@@ -144,7 +160,7 @@ export default function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-5 space-y-4 overflow-y-auto">
+      <nav className="flex-1 px-4 py-5 space-y-2 overflow-y-auto">
         <p
           className="text-sm font-semibold px-1 mb-2"
           style={{ color: "#6b7fa3" }}

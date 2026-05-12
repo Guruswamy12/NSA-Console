@@ -1,39 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus, Pencil, Trash2, Tag } from "lucide-react";
 import { api } from "../../api";
 import type { Category } from "../../mock/data";
 import { CategoryModal } from "./category-modal";
+import { useCategories } from "../../context/CategoriesContext";
 
 export function CategoryList() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { categories, loading, refresh } = useCategories();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
-  const fetchCategories = async () => {
-    setLoading(true);
-    try {
-      const data = await api.getCategories();
-      const list = Array.isArray(data)
-        ? data
-        : data?.data || data?.categories || [];
-      setCategories(list);
-    } catch (error) {
-      console.error("Failed to fetch categories", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this category?")) return;
     try {
       await api.deleteCategory(id);
-      await fetchCategories();
+      await refresh();
     } catch (error) {
       console.error("Failed to delete category", error);
     }
@@ -46,7 +27,7 @@ export function CategoryList() {
       } else {
         await api.createCategory(saved);
       }
-      await fetchCategories();
+      await refresh();
     } catch (error) {
       console.error("Failed to save category", error);
     }
@@ -72,9 +53,9 @@ export function CategoryList() {
         </button>
       </div>
 
-   <div className="bg-white rounded-lg border-gray-200 shadow-xl">
+      <div className="bg-white rounded-lg border-gray-200 shadow-xl">
         <div className="p-4 flex items-center justify-between">
-           <div className="px-5">
+          <div className="px-5">
             <h2 className="font-semibold">All Categories</h2>
             <p className="text-sm text-gray-500">
               List of all categories available for blogs.
@@ -84,8 +65,8 @@ export function CategoryList() {
             <Tag className="h-5 w-5 text-primary" />
           </div>
         </div>
-          <div className="overflow-x-auto p-8">
-          <table className="w-full text-sm shadow-md rounded-xl border border-gray-300">
+        <div className="overflow-x-auto p-8">
+          <table className="w-full text-sm shadow-sm rounded-xl border-gray-300">
             <thead className="bg-gray-100 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold">Name</th>
@@ -117,7 +98,9 @@ export function CategoryList() {
                     key={cat._id}
                     className="border-b border-gray-300 last:border-0 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-4 py-3 font-medium text-sm">{cat.name}</td>
+                    <td className="px-4 py-3 font-medium text-sm">
+                      {cat.name}
+                    </td>
                     <td className="px-4 py-3">
                       {cat.parentId ? (
                         <span className="px-2.5 py-0.5 bg-primary/10 text-primary rounded-xl text-xs font-medium border border-primary/20">

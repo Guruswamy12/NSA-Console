@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -12,8 +12,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isLoggedIn()) navigate("/dashboard", { replace: true });
-  }, []);
+    if (isLoggedIn) navigate("/dashboard", { replace: true });
+  }, [isLoggedIn, navigate]);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();

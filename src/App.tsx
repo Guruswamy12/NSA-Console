@@ -1,5 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "./hooks/useAuth";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CategoriesProvider } from "./context/CategoriesContext";
+import { TeamProvider } from "./context/TeamContext";
 import LoginPage from "./pages/login-page";
 import DashboardLayout from "./layouts/dashboard-layout";
 import DashboardHome from "./pages/dashboard/dashboard-home";
@@ -12,36 +18,44 @@ import UsersPage from "./pages/dashboard/team/users-page";
 import RolesPage from "./pages/dashboard/team/roles-page";
 import PermissionsPage from "./pages/dashboard/team/permissions-page";
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedLayout() {
   const { isLoggedIn } = useAuth();
-  return isLoggedIn() ? <>{children}</> : <Navigate to="/" replace />;
+  if (!isLoggedIn) return <Navigate to="/" replace />;
+  return <DashboardLayout />;
+}
+
+const router = createBrowserRouter([
+  { path: "/", element: <LoginPage /> },
+  {
+    path: "/dashboard",
+    element: <ProtectedLayout />,
+    children: [
+      { index: true, element: <DashboardHome /> },
+      { path: "blogs", element: <BlogsPage /> },
+      { path: "blogs/new", element: <NewBlogPage /> },
+      { path: "blogs/categories", element: <CategoriesPage /> },
+      { path: "blogs/:id", element: <EditBlogPage /> },
+      { path: "blogs/:id/view", element: <ViewBlogPage /> },
+      { path: "team/users", element: <UsersPage /> },
+      { path: "team/roles", element: <RolesPage /> },
+      { path: "team/permissions", element: <PermissionsPage /> },
+    ],
+  },
+  { path: "*", element: <Navigate to="/" replace /> },
+]);
+
+function AppRoutes() {
+  return <RouterProvider router={router} />;
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<DashboardHome />} />
-          <Route path="blogs" element={<BlogsPage />} />
-          <Route path="blogs/new" element={<NewBlogPage />} />
-          <Route path="blogs/categories" element={<CategoriesPage />} />
-          <Route path="blogs/:id" element={<EditBlogPage />} />
-          {/* <Route path="blogs/:id/view" element={<ViewBlogPage />} /> */}
-          <Route path="team/users" element={<UsersPage />} />
-          <Route path="team/roles" element={<RolesPage />} />
-          <Route path="team/permissions" element={<PermissionsPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <CategoriesProvider>
+        <TeamProvider>
+          <AppRoutes />
+        </TeamProvider>
+      </CategoriesProvider>
+    </AuthProvider>
   );
 }

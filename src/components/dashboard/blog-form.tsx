@@ -30,7 +30,14 @@ interface FormData {
   excerpt: string;
   altTag: string;
   authorName: string;
+  isActive: boolean;
+  canonical: string;
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+  updatedDate: string;
   sections: Section[];
+  createdBy?:string;
+  updatedBy?:string;
   faqs: Faq[];
 }
 
@@ -38,6 +45,16 @@ interface BlogFormProps {
   initialData?: Blog | null;
   isEditing?: boolean;
 }
+
+const BASE_SITE = "https://www.northstaracad.com";
+
+const toSlug = (title: string) =>
+  title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 
 const inputCls =
   "w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-transparent shadow-sm focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-gray-400 disabled:opacity-50";
@@ -57,6 +74,15 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
     excerpt: initialData?.excerpt || "",
     altTag: initialData?.altTag || "",
     authorName: initialData?.authorName || "NorthStar Academy",
+    isActive: initialData?.isActive ?? true,
+    canonical:
+      (initialData as unknown as Record<string, string>)?.canonical || "",
+    robotsIndex:
+      (initialData as unknown as Record<string, boolean>)?.robotsIndex ?? true,
+    robotsFollow:
+      (initialData as unknown as Record<string, boolean>)?.robotsFollow ?? true,
+    updatedDate:
+      (initialData as unknown as Record<string, string>)?.updatedDate || "",
     sections:
       initialData?.sections && initialData.sections.length > 0
         ? initialData.sections
@@ -145,6 +171,7 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
     const cleanSections = formData.sections.filter((s) => s.title && s.content);
     const cleanFaqs = formData.faqs.filter((f) => f.question && f.answer);
     const payload = { ...formData, sections: cleanSections, faqs: cleanFaqs };
+    
     try {
       const res = isEditing
         ? await api.updateBlog(initialData!._id, payload)
@@ -193,7 +220,7 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
           </button>
           <button
             type="submit"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
+            className="flex items-center gap-2 px-2 py-0.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
           >
             <Save className="h-4 w-4" />
             {isEditing ? "Update Blog" : "Create Blog"}
@@ -457,6 +484,57 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
             <div className="px-5 py-4 border-b border-gray-100">
               <h2 className="text-base font-semibold text-gray-900">
+                Visibility
+              </h2>
+            </div>
+            <div className="px-5 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">
+                    Page Status
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {formData.isActive
+                      ? "Page is live and visible"
+                      : "Page is hidden from visitors"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isActive: !prev.isActive,
+                    }))
+                  }
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                    formData.isActive ? "bg-green-500" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                      formData.isActive ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+              <div
+                className={`mt-3 px-3 py-2 rounded-lg text-xs font-medium ${
+                  formData.isActive
+                    ? "bg-green-50 text-green-700"
+                    : "bg-gray-50 text-gray-500"
+                }`}
+              >
+                {formData.isActive
+                  ? "✓ Active — page works normally"
+                  : "✕ Inactive — page is deactivated"}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-gray-900">
                 Meta Information
               </h2>
             </div>
@@ -471,6 +549,19 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   className={inputCls}
                   placeholder="Comma separated keywords"
                   value={formData.keywords}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="">
+                <label htmlFor="excerpt" className={labelCls}>
+                  Meta Title
+                </label>
+                <textarea
+                  id="excerpt"
+                  name="excerpt"
+                  className={`${inputCls} min-h-[70px] resize-none`}
+                  placeholder="Meta Title"
+                  value={formData.title}
                   onChange={handleChange}
                 />
               </div>
@@ -499,6 +590,146 @@ export function BlogForm({ initialData, isEditing = false }: BlogFormProps) {
                   value={formData.authorName}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div>
+                <label htmlFor="updatedDate" className={labelCls}>
+                  Post / Page Update Date
+                </label>
+                <input
+                  id="updatedDate"
+                  name="updatedDate"
+                  type="date"
+                  className={inputCls}
+                  value={formData.updatedDate}
+                  onChange={handleChange}
+                />
+                {formData.updatedDate && (
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    Displays as:{" "}
+                    <span className="font-medium">
+                      {(() => {
+                        const [y, m, d] = formData.updatedDate
+                          .split("-")
+                          .map(Number);
+                        return new Date(y, m - 1, d).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          },
+                        );
+                      })()}
+                    </span>
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="canonical" className={labelCls}>
+                  Canonical URL
+                </label>
+                <input
+                  id="canonical"
+                  name="canonical"
+                  className={inputCls}
+                  placeholder={
+                    formData.title
+                      ? `${BASE_SITE}/blog/${toSlug(formData.title)}`
+                      : `${BASE_SITE}/blog/your-blog-slug`
+                  }
+                  value={formData.canonical}
+                  onChange={handleChange}
+                />
+                <p className="mt-1.5 text-xs text-gray-400">
+                  Default:{" "}
+                  <span className="font-mono text-gray-500 break-all">
+                    {formData.title
+                      ? `${BASE_SITE}/blog/${toSlug(formData.title)}`
+                      : `${BASE_SITE}/blog/…`}
+                  </span>
+                </p>
+              </div>
+
+              <div>
+                <label className={labelCls}>Meta Robots</label>
+                <div className="space-y-3 mt-1">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        {formData.robotsIndex ? "index" : "noindex"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {formData.robotsIndex
+                          ? "Page will be indexed by search engines"
+                          : "Page will NOT be indexed"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((p) => ({
+                          ...p,
+                          robotsIndex: !p.robotsIndex,
+                        }))
+                      }
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                        formData.robotsIndex ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                          formData.robotsIndex
+                            ? "translate-x-4"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        {formData.robotsFollow ? "follow" : "nofollow"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {formData.robotsFollow
+                          ? "Links on this page will be followed"
+                          : "Links on this page will NOT be followed"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((p) => ({
+                          ...p,
+                          robotsFollow: !p.robotsFollow,
+                        }))
+                      }
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                        formData.robotsFollow ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                          formData.robotsFollow
+                            ? "translate-x-4"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="px-3 py-2 rounded-lg bg-gray-100 border border-gray-200">
+                    <p className="text-xs text-gray-400 mb-1">Generated tag</p>
+                    <code className="text-xs text-gray-700 break-all">
+                      {`<meta name="robots" content="${[
+                        formData.robotsIndex ? "index" : "noindex",
+                        formData.robotsFollow ? "follow" : "nofollow",
+                      ].join(", ")}" />`}
+                    </code>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

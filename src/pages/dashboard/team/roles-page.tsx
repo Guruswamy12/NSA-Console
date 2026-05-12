@@ -1,8 +1,5 @@
-import { useEffect, useState } from "react";
-import { ShieldCheck, Pencil, Trash2 } from "lucide-react";
-import { api } from "../../../api";
-
-type RoleRecord = Record<string, unknown>;
+import { ShieldCheck } from "lucide-react";
+import { useTeam, type RoleRecord } from "../../../context/TeamContext";
 
 const getField = (obj: RoleRecord, ...keys: string[]): string => {
   for (const key of keys) {
@@ -19,31 +16,15 @@ const formatDate = (val: unknown): string => {
 };
 
 export default function RolesPage() {
-  const [roles, setRoles] = useState<RoleRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      setLoading(true);
-      try {
-        const data = await api.getRoles();
-        const list = Array.isArray(data)
-          ? data
-          : data?.data || data?.roles || [];
-        setRoles(list);
-      } catch (error) {
-        console.error("Failed to fetch roles", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRoles();
-  }, []);
+  const { roles, rolesLoading: loading } = useTeam();
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Roles</h1>
+        <h1 className="flex items-center gap-2 text-3xl font-bold text-gray-900">
+          <ShieldCheck className="h-8 w-8 text-primary" />
+          Roles
+        </h1>
         <p className="text-gray-500 mt-1">
           Manage roles and their permissions.
         </p>
@@ -51,20 +32,17 @@ export default function RolesPage() {
 
       <div className="bg-white rounded-lg border-gray-200 shadow-xl">
         <div className="p-4 flex items-center justify-between">
-           <div className="px-5">
-          <h2 className="font-semibold text-gray-900">All Roles</h2>
-          <p className="text-sm text-gray-700 mt-0.5">
-           A list of all roles in the system.
-          </p>
-        </div>
-          <div className="bg-purple-50 p-2 rounded-full">
-            <ShieldCheck className="h-5 w-5 text-purple-600" />
+          <div className="px-5">
+            <h2 className="font-semibold text-gray-900">All Roles</h2>
+            <p className="text-sm text-gray-700 mt-0.5">
+              A list of all roles in the system.
+            </p>
           </div>
         </div>
 
         <div className="overflow-x-auto p-5">
-          <table className="w-full text-sm shadow-md rounded-xl border border-gray-300">
-            <thead className="bg-gray-100 border-b border-gray-100">
+          <table className="w-full text-sm shadow-md rounded-xl  border-gray-300">
+            <thead className="bg-gray-100  border-gray-100">
               <tr className="">
                 <th className="text-left px-4 py-3 font-semibold text-black">
                   Role Name
@@ -96,7 +74,7 @@ export default function RolesPage() {
                 <tr>
                   <td colSpan={3} className="text-center py-16 text-gray-400">
                     <div className="flex flex-col items-center gap-2">
-                      <ShieldCheck className="h-8 w-8 text-gray-300" />
+                      {/* <ShieldCheck className="h-8 w-8 text-gray-300" /> */}
                       <p className="font-medium">No roles found</p>
                     </div>
                   </td>

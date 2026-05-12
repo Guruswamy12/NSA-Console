@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { Settings2 } from "lucide-react";
-import { api } from "../../../api";
+import { useTeam, type PermissionRecord } from "../../../context/TeamContext";
 
-interface Permission {
+interface Permission extends PermissionRecord {
   _id: string;
   groupName: string;
   actionName: string;
@@ -10,33 +9,18 @@ interface Permission {
 }
 
 export default function PermissionsPage() {
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      setLoading(true);
-      try {
-        const data = await api.getPermissions();
-        const list = Array.isArray(data)
-          ? data
-          : data?.data || data?.permissions || [];
-        setPermissions(list);
-      } catch (error) {
-        console.error("Failed to fetch permissions", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPermissions();
-  }, []);
+  const { permissions: rawPermissions, permissionsLoading: loading } =
+    useTeam();
+  const permissions = rawPermissions as Permission[];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Settings2 className="h-7 w-7 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Permissions</h1>
+      <div className="flex items-center gap-2">
+        <div className="">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <Settings2 className="h-7 w-7 text-primary" />
+            Permissions
+          </h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Manage system permissions and access controls.
           </p>
@@ -44,7 +28,7 @@ export default function PermissionsPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-300 shadow-sm">
-        <div className="px-5 py-4">
+        <div className="px-5 pt-4">
           <h2 className="font-semibold text-gray-900">All Permissions</h2>
           <p className="text-xs text-gray-400 mt-0.5">
             A comprehensive list of system permissions.
@@ -52,7 +36,7 @@ export default function PermissionsPage() {
         </div>
 
         <div className="overflow-x-auto p-5 rounded-xl">
-          <table className=" w-full text-sm shadow-md rounded-xl border border-gray-300">
+          <table className=" w-full text-sm shadow-md rounded-xl  border-gray-300">
             <thead className="border-b border-gray-300 bg-gray-50">
               <tr>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600">

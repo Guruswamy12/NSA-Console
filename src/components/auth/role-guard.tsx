@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthContext";
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -14,39 +13,25 @@ export default function RoleGuard({
   restrictedRoles,
 }: RoleGuardProps) {
   const navigate = useNavigate();
-  const { getUser } = useAuth();
-  const [authorized, setAuthorized] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoggedIn } = useAuth();
 
-  useEffect(() => {
-    const user = getUser();
-    if (!user) {
-      navigate("/");
-      return;
-    }
-    const role = user?.role?.toLowerCase().trim();
-    let isAuthorized = true;
-    if (allowedRoles?.length) {
-      isAuthorized = allowedRoles
-        .map((r) => r.toLowerCase().trim())
-        .includes(role);
-    } else if (restrictedRoles?.length) {
-      isAuthorized = !restrictedRoles
-        .map((r) => r.toLowerCase().trim())
-        .includes(role);
-    }
-    setAuthorized(isAuthorized);
-    setLoading(false);
-  }, []);
+  if (!isLoggedIn || !user) {
+    navigate("/");
+    return null;
+  }
 
-  if (loading)
-    return (
-      <div className="flex h-screen items-center justify-center text-gray-500">
-        Checking permissions...
-      </div>
-    );
+  const role = user.role?.toLowerCase().trim();
+  let authorized = true;
 
-  if (!authorized)
+  if (allowedRoles?.length) {
+    authorized = allowedRoles.map((r) => r.toLowerCase().trim()).includes(role);
+  } else if (restrictedRoles?.length) {
+    authorized = !restrictedRoles
+      .map((r) => r.toLowerCase().trim())
+      .includes(role);
+  }
+
+  if (!authorized) {
     return (
       <div className="flex h-screen flex-col items-center justify-center text-center p-4">
         <h1 className="text-4xl font-bold text-red-600 mb-4">Access Denied</h1>
@@ -61,6 +46,7 @@ export default function RoleGuard({
         </button>
       </div>
     );
+  }
 
   return <>{children}</>;
 }

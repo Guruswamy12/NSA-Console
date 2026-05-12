@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import type { Category } from "../../mock/data";
+import { X } from "lucide-react";
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -19,8 +20,7 @@ export function CategoryModal({
 }: CategoryModalProps) {
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("none");
-  const [loading, setLoading] = useState(false)
-
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (categoryToEdit) {
@@ -35,12 +35,17 @@ export function CategoryModal({
   if (!isOpen) return null;
 
   const parentOptions = allCategories.filter(
-    (c) => c._id !== categoryToEdit?._id,
+    (c) => c._id !== categoryToEdit?._id
   );
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+
+    setLoading(true);
+
     const selectedParent =
       parentOptions.find((c) => c._id === parentId) || null;
+
     const saved: Category = categoryToEdit
       ? {
           ...categoryToEdit,
@@ -48,7 +53,10 @@ export function CategoryModal({
           parentId:
             parentId === "none"
               ? null
-              : { _id: selectedParent!._id, name: selectedParent!.name },
+              : {
+                  _id: selectedParent!._id,
+                  name: selectedParent!.name,
+                },
         }
       : {
           _id: `c${Date.now()}`,
@@ -56,44 +64,69 @@ export function CategoryModal({
           parentId:
             parentId === "none"
               ? null
-              : { _id: selectedParent!._id, name: selectedParent!.name },
+              : {
+                  _id: selectedParent!._id,
+                  name: selectedParent!.name,
+                },
           createdAt: new Date().toISOString(),
         };
+
     onSuccess(saved);
+    setLoading(false);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <h2 className="text-lg font-semibold mb-1">
-          {categoryToEdit ? "Edit Category" : "Add Category"}
-        </h2>
-        <p className="text-sm text-gray-500 mb-4">
-          {categoryToEdit
-            ? "Update category details."
-            : "Create a new category for your blogs."}
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-4 px-2">
-          <div className="flex justify-between gap-15 items-center">
-            <label className="block text-sm font-medium mb-1">Name</label>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-md rounded-2xl bg-[#F8F9FC] shadow-2xl border border-gray-200">
+        <div className="flex items-start justify-between px-6 pt-4">
+          <div>
+            <h2 className="text-xl font-semibold text-[#0F172A]">
+              {categoryToEdit ? "Edit Category" : "Add Category"}
+            </h2>
+
+            <p className="mt-1 text-sm text-[#64748B]">
+              {categoryToEdit
+                ? "Update category details."
+                : "Create a new category for your blogs."}
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-black"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-8 py-5">
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4 mb-6">
+            <label className="text-md  font-semibold text-[#111827]">
+              Name
+            </label>
+
             <input
-              className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              className="h-8 w-full rounded-lg border border-[#3B82F6] bg-white px-5 text-lg outline-none ring-4 ring-blue-100 focus:ring-blue-200"
             />
           </div>
-            <div className="flex justify-center gap-5 items-center">
-            <label className="block text-sm font-medium mb-1">
+
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4 mb-6">
+            <label className="text-md font-semibold text-[#111827]">
               Parent Category
             </label>
+
             <select
-              className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
+              className="h-8   w-full rounded-lg border border-gray-300 bg-white px-5 text-lg text-gray-700 outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="none">None (Root Category)</option>
+
               {parentOptions.map((cat) => (
                 <option key={cat._id} value={cat._id}>
                   {cat.name}
@@ -101,19 +134,22 @@ export function CategoryModal({
               ))}
             </select>
           </div>
-          <div className="flex justify-end gap-2 pt-2">
+
+          <div className="flex justify-end gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+              className="h-8 rounded-lg border border-gray-300 bg-white px-6 text-lg font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
+
             <button
-              type="submit" disabled={loading}
-              className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover"
+              type="submit"
+              disabled={loading}
+              className="h-8 rounded-lg bg-[#0B5ED7] px-4  text-lg font-medium text-white hover:bg-[#0A58CA]"
             >
-                 {loading ? "Saving..." : "Save changes"}
+              {loading ? "Saving..." : "Save changes"}
             </button>
           </div>
         </form>

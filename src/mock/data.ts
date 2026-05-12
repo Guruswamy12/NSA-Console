@@ -26,10 +26,19 @@ export interface Blog {
   altTag: string;
   categoryId: { _id: string; name: string } | null;
   status: string;
+  isActive: boolean;
   authorName: string;
   keywords: string;
   votes: number;
   createdAt: string;
+  metaTitle: string | null;
+  headingTag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  canonicalUrl: string | null;
+  updatedDate: string | null;
+  metaRobotsIndex: "index" | "noindex";
+  metaRobotsFollow: "follow" | "nofollow";
+  createdBy: string | null;
+  updatedBy: string | null;
   sections: BlogSection[];
   faqs: BlogFaq[];
 }

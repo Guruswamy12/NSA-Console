@@ -1,49 +1,17 @@
-import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
-import { api } from "../../../api";
-
-interface RoleId {
-  _id: string;
-  roleName: string;
-}
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  roleId?: RoleId;
-  status?: string;
-  createdAt: string;
-}
+import { useTeam } from "../../../context/TeamContext";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const data = await api.getUsers();
-        const list = Array.isArray(data)
-          ? data
-          : data?.data || data?.users || [];
-        setUsers(list);
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
+  const { users, usersLoading: loading } = useTeam();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Users className="h-7 w-7 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <h1 className=" flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <Users className="h-7 w-7 text-primary" />
+            Users
+          </h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Manage team members and their roles.
           </p>
@@ -51,15 +19,15 @@ export default function UsersPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-300 shadow-sm">
-        <div className="px-5 py-4">
+        <div className="px-5 pt-4">
           <h2 className="font-semibold text-gray-900">Team Members</h2>
           <p className="text-xs text-gray-400 mt-0.5">
             A list of all users with access to the platform.
           </p>
         </div>
 
-         <div className="overflow-x-auto p-5 rounded-xl">
-          <table className=" w-full text-sm shadow-md rounded-xl border border-gray-300">
+        <div className="overflow-x-auto p-5 rounded-xl">
+          <table className=" w-full text-sm shadow-md rounded-xl  border-gray-800">
             <thead className="border-b border-gray-300 bg-gray-50">
               <tr>
                 <th className="text-left px-5 py-3 font-semibold text-black">

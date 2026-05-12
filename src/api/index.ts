@@ -57,6 +57,13 @@ export const api = {
       headers: authHeaders(),
     }),
 
+  toggleBlogActive: (id: string, isActive: boolean) =>
+    fetch(`${BASE_URL}/blogs/${id}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ isActive }),
+    }),
+
   getCategories: () =>
     fetch(`${BASE_URL}/categories`, { headers: authHeaders() }).then((r) =>
       r.json(),
